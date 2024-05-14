@@ -1,0 +1,108 @@
+#!/bin/bash -l
+#SBATCH --account=CHANGEME      ### change this to your actual account for charging
+#SBATCH --job-name=extract      ### job name
+#SBATCH --output=hostname.out   ### file in which to store job stdout
+#SBATCH --error=hostname.err    ### file in which to store job stderr
+#SBATCH --partition=compute
+#SBATCH --time=4:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1 
+
+# To use, run:
+
+# sbatch extract_md.srun
+
+# This will make a directory called "output" with the trajectory split into 20 ns
+# chunks. If you do not want to split into chunks, set split_interval="" below.
+
+# This implements the recommended workflow from gromacs people
+# 1. First make your molecules whole if you want them whole.
+# 2. Cluster your molecules/particles if you want them clustered.
+# 3. Extract the first frame from the trajectory as reference for removing jumps
+#    if you want to remove jumps.
+# 4. Remove jumps if you want to have them removed using the first frame
+# 5. Center your system using some criterion. Doing so shifts the system, so
+#    don't use trjconv -pbc nojump after this step.
+# 6. Put everything in some box.
+# 7. Fit if desired and don't use any PBC related option afterwards.
+
+# CHANGEME. Update this to make sure you have access to a gromacs binary on your 
+# cluster
+# module load gromacs/2023.4
+
+# Set up run
+base_name="md_0_1"
+starting_gro="npt.gro"
+dest_dir="output"
+custom_idx_dir="pre_solvate"
+out_root="traj"
+
+# If you do not want to split, set split_interval to ""
+split_interval=20000
+
+# ndx_file is a gromacs index file. pre_solvate.ndx is generated automatically by
+# setup_md.py
+ndx_file="pre_solvate.ndx"
+xtc_file="${base_name}.xtc"
+tpr_file="${base_name}.tpr"
+
+# Nuke output directory, remake, and copy in starting_gro file
+rm -rf ${dest_dir}
+mkdir ${dest_dir}
+
+# Copy the gro file to the output folder
+cp ${starting_gro} ${dest_dir}/${out_root}.gro
+cp ${tpr_file} ${dest_dir}/${out_root}.tpr
+
+# Make a temporary extraction directory
+mkdir extract-tmp
+cp ${dest_dir}/${out_root}.tpr extract-tmp/
+cd extract-tmp
+
+# Make whole 
+echo "Make whole."
+echo "0" > junk.command
+cat junk.command | gmx trjconv -f ../${xtc_file} -pbc whole -o ${out_root}.xtc -s ${out_root}.tpr
+
+# Now remove jumps
+echo "Remove jumps."
+echo "0" > junk.command
+cat junk.command | gmx trjconv -f ${out_root}.xtc -pbc nojump -o ${out_root}.xtc -s ${out_root}.tpr
+
+# Now center on the protein
+echo "Center on protein."
+echo "1" > junk.command
+echo "0" >> junk.command
+cat junk.command | gmx trjconv -f ${out_root}.xtc -center -pbc mol -o ${out_root}.xtc -s ${out_root}.tpr
+
+# Now align
+echo "3" > junk.command
+echo "0" >> junk.command
+cat junk.command | gmx trjconv -f ${out_root}.xtc -s ${out_root}.tpr -fit rot+trans -o ${out_root}.xtc
+
+# Split the final trajectory if desired, then move to destination directory
+if [ ${split_interval} ]; then
+    echo "Split file."
+    echo "0" > junk.command
+    cat junk.command | gmx trjconv -f ${out_root}.xtc -split ${split_interval} -s ${out_root}.tpr -o ${out_root}-split.xtc 
+
+    cp ${out_root}*split*.xtc ../${dest_dir}
+else
+    cp ${out_root}.xtc ../${dest_dir}
+fi
+
+# Write out the trajectory with all solvent stripped off. The ndx_file can be 
+# made manually by gmx make_ndx. The file no_solvent.ndx will be made 
+# automatically by setup_md.py. This index file will have the molecules sent in
+# by the user when the sim was built, except for added solvent and counter ions.
+mkdir ../${dest_dir}/${custom_idx_dir}/
+cp ${out_root}.tpr ../${dest_dir}/${custom_idx_dir}/
+gmx trjconv -f ../${starting_gro}  -s ${out_root}.tpr -o ../${dest_dir}/${custom_idx_dir}/${out_root}.gro -n ../${ndx_file}
+gmx trjconv -f ${out_root}.xtc -s ${out_root}.tpr -o ../${dest_dir}/${custom_idx_dir}/${out_root}.xtc -n ../${ndx_file}
+
+
+# Delete extraction directory
+cd ..
+rm -rf extract-tmp
+

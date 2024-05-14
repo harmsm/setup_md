@@ -1,0 +1,23 @@
+#!/bin/bash -l
+#SBATCH --account=CHANGEME      ### change this to your actual account for charging
+#SBATCH --job-name=testrun      ### job name
+#SBATCH --output=hostname.out   ### file in which to store job stdout
+#SBATCH --error=hostname.err    ### file in which to store job stderr
+#SBATCH --partition=compute    
+#SBATCH --time=00-01:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1 
+
+# To run, type:
+
+# sbatch test.srun
+
+# If it is working, this will create three empty files: hostname.out, 
+# hostname.err, and a file with the current date and time.
+
+module load gromacs/2023.4
+
+v=`date`
+now=`echo ${v} | sed 's/ /_/g'`
+touch ${now}
