@@ -2875,28 +2875,3 @@ LPS	     3
    58   255    56    59     2
   139   141    32   140     2
   255   257    58   256     2
-
-#ifdef POSRES
-[ position_restraints ]
-   47     1     0.0             0.0            POSRES_FC_LIPID
-#endif
-
-#ifdef DIHRES
-[ dihedral_restraints ]
-    6    15    22    30     1     60.0      2.5       DIHRES_FC
-   15    22    30     9     1    -60.0      2.5       DIHRES_FC
-   22    30     9     7     1     60.0      2.5       DIHRES_FC
-   30     9     7     6     1    -60.0      2.5       DIHRES_FC
-    9     7     6    15     1     60.0      2.5       DIHRES_FC
-    7     6    15    22     1    -60.0      2.5       DIHRES_FC
-   34    38    40    41     1     60.0      2.5       DIHRES_FC
-   38    40    41    56     1    -60.0      2.5       DIHRES_FC
-   40    41    56    48     1     60.0      2.5       DIHRES_FC
-   41    56    48    34     1    -60.0      2.5       DIHRES_FC
-   56    48    34    38     1     60.0      2.5       DIHRES_FC
-   48    34    38    40     1    -60.0      2.5       DIHRES_FC
-   27    62    60   105     1    120.0      2.5       DIHRES_FC
-  141   146   144   183     1    120.0      2.5       DIHRES_FC
-   53   219   217   221     1    120.0      2.5       DIHRES_FC
-  262   264   260   257     1    120.0      2.5       DIHRES_FC
-#endif
