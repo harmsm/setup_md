@@ -111,13 +111,7 @@ mv ~/PROTEIN.pdb .  # Move the PROTEIN.pdb from your home directory to here
 srun --account=MYPIRG --partition=compute --pty bash
 ```
 
-5. Because we are going to use GROMACS, we need to load the gromacs module. This will make gromacs available as a command. Run the following:
-
-```bash
-module load gromacs/2023.4
-```
-
-6. Set up the calculation with the following command. This will create a directory called `md-input` that can be used to run an MD simulation. It uses the CHARMM36 forcefield and the .mdp run files from "run_md/ff". This command assumes you placed the `run_md` directory in your home directory when you set up the computing environment. If you put it somewhere else, alter the path accordingly. 
+5. Set up the calculation with the following command. This will create a directory called `md-input` that can be used to run an MD simulation. It uses the CHARMM36 forcefield and the .mdp run files from "run_md/ff". This command assumes you placed the `run_md` directory in your home directory when you set up the computing environment. If you put it somewhere else, alter the path accordingly. 
 
 ```
 ~/setup_md/setup_md.py md-input --standard PROTEIN.pdb
@@ -161,26 +155,26 @@ Before cleaning: 1115 dihedrals
 ~/setup_md/setup_md.py md-input --standard PROTEIN.pdb --custom DIRECTORY/model-to-pose.pdb --params DIRECTORY/gromacs/
 ```
 
-7. After this command runs, the `md-input/` directory will be populated with several sub-directories. The `final` directory has everything we need to run a simulation. I like to copy this to a directory called `template` that I can just copy again if I want to do replicate runs. I then create a copy of `template` called `run000` with my first replicate. If I wanted to do another run, I could copy `template` to `run001`, etc. (Note: each simulation randomly assigns initial velocities to each atom, so the outputs will be different even starting from the exact same starting structure).
+6. After this command runs, the `md-input/` directory will be populated with several sub-directories. The `final` directory has everything we need to run a simulation. I like to copy this to a directory called `template` that I can just copy again if I want to do replicate runs. I then create a copy of `template` called `run000` with my first replicate. If I wanted to do another run, I could copy `template` to `run001`, etc. (Note: each simulation randomly assigns initial velocities to each atom, so the outputs will be different even starting from the exact same starting structure).
 
 ```bash
 cp md-input/final template
 cp -r template run000
 ```
 
-8. You can now leave the interactive session on the compute node. 
+7. You can now leave the interactive session on the compute node. 
 
 ```bash
 exit
 ```
 
-9. Next, download the file `template/system.gro` to your local computer to inspect and make sure it looks reasonable. Type the following on a *local* terminal. This will copy system.gro from the cluster to the current directory on your computer. 
+8. Next, download the file `template/system.gro` to your local computer to inspect and make sure it looks reasonable. Type the following on a *local* terminal. This will copy system.gro from the cluster to the current directory on your computer. 
 
 ```bash
 scp USERNAME@login.talapas.uoregon.edu:shared/SIMS/template/system.gro .
 ```
 
-10. Open `system.gro` in VMD or PyMOL and make sure it looks right. It should have your protein centered in a cube of waters with ions sodium and chloride atoms randomly scattered about. If you added a custom ligand, that ligand should be in place. This is the final, final check to make sure things look good before running your calculation. 
+9. Open `system.gro` in VMD or PyMOL and make sure it looks right. It should have your protein centered in a cube of waters with ions sodium and chloride atoms randomly scattered about. If you added a custom ligand, that ligand should be in place. This is the final, final check to make sure things look good before running your calculation. 
 
 ### IV. Run an MD simulation
 
